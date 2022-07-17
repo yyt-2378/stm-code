@@ -4,7 +4,10 @@ from rdkit.Chem import Draw
 from matplotlib import pyplot as plt
 import numpy as np
 import warnings
+<<<<<<< HEAD
 import os
+=======
+>>>>>>> 23e8f4f893e395a750f6e805f2e603a78fa0dcd5
 from mpl_toolkits.mplot3d import Axes3D
 
 try:
@@ -17,10 +20,20 @@ except:
 import math
 import csv
 
+<<<<<<< HEAD
+=======
+
+def nested_list_to_tuple_recur(nested_list):  # 嵌套列表转化为嵌套元组便于集合筛选出重复序列
+    return tuple(
+        nested_list_to_tuple_recur(l) if isinstance(l, list)
+        else l for l in nested_list
+    )
+>>>>>>> 23e8f4f893e395a750f6e805f2e603a78fa0dcd5
 
 def mkdir(path):
     folder = os.path.exists(path)
 
+<<<<<<< HEAD
     if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
         os.makedirs(path)  # makedirs 创建文件时如果路径不存在会创建这个路径
         print("---  new folder...  ---")
@@ -43,6 +56,19 @@ def points_height_matrix(smi, resolution, show=False):
     mol_2D = Chem.MolFromMolBlock(moleblock_2D)
     conf = mol_2D.GetConformer()
     sub = mol_2D.GetSubstructMatch(mol_2D)  # 这一步是统计你所需查找返回分子的个数列表，m3d：是查询分子的smile结构,我们这里使用自查询
+=======
+def points_height_matrix(smi, resolution, show=False):
+    mol = Chem.MolFromSmiles(smi)
+    # 在结构中添加H原子
+    m3d = Chem.AddHs(mol)
+    AllChem.EmbedMolecule(m3d, randomSeed=3)
+    AllChem.MMFFOptimizeMolecule(m3d)  # 2D分子转为3D结构，并用力学函数进行角度校正及优化
+    moleblock = Chem.MolToMolBlock(m3d)  # 返回分子中各个原子的三维坐标
+    if show:
+        Draw.ShowMol(m3d, size=(550, 550), kekulize=False)
+    conf = m3d.GetConformer()
+    sub = m3d.GetSubstructMatch(m3d)  # 这一步是统计你所需查找返回分子的个数，m3d：是查询分子的smile结构,我们这里使用自查询
+>>>>>>> 23e8f4f893e395a750f6e805f2e603a78fa0dcd5
     # 记录每一个原子的位置
     atom_position = []
     for s in range(atom_num):
@@ -66,9 +92,12 @@ def points_height_matrix(smi, resolution, show=False):
             x.append(0.99)
         else:
             raise NotImplementedError("only support C, H, O, S, N, Cl")
+<<<<<<< HEAD
         x.append(mol_2D.GetAtomWithIdx(s).GetIdx())
+=======
+>>>>>>> 23e8f4f893e395a750f6e805f2e603a78fa0dcd5
         atom_position.append(x)
-    print(atom_position)
+    # print(atom_position)
     # 在三维坐标系绘制得到的原子坐标，可通过原子坐标调整三维坐标轴大小
     if show and ENABLE_MAYAVI:
         plt.figure()  # 得到画面
@@ -104,7 +133,10 @@ def points_height_matrix(smi, resolution, show=False):
     # todo: change tuple operation to numpy operation
     points_intial = np.zeros([resolution, resolution])  # 建立网格点的初始化高度矩阵，与生成点阵坐标一一对应
     # print(x_max, x_min, y_max, y_min)
+<<<<<<< HEAD
     points_bool=np.zeros([atom_num,resolution,resolution])
+=======
+>>>>>>> 23e8f4f893e395a750f6e805f2e603a78fa0dcd5
     x_axes = np.linspace(x_min, x_max, resolution)
     y_axes = np.linspace(y_min, y_max, resolution)
     X, Y = np.meshgrid(x_axes, y_axes)
@@ -137,6 +169,7 @@ def points_height_matrix(smi, resolution, show=False):
                 continue
             else:
                 point_height_max = max(height)
+<<<<<<< HEAD
                 point_height_max_index=height.index(point_height_max)
                 points_intial[r][t] = point_height_max
                 point_idex=idex_list[point_height_max_index]
@@ -146,6 +179,15 @@ def points_height_matrix(smi, resolution, show=False):
         plt.show()
     with open("C:\\stm-result\\points_height.csv", "w+", newline='', encoding='GBK') as f1:
         writer = csv.writer(f1, delimiter=',')
+=======
+                # print(point_height_max)
+                points_intial[r][t] = point_height_max
+    if show:
+        plt.imshow(points_intial)
+        plt.show()
+    with open("points_height.csv", "w+", newline='', encoding='GBK') as f:
+        writer = csv.writer(f, delimiter=',')
+>>>>>>> 23e8f4f893e395a750f6e805f2e603a78fa0dcd5
         for i in points_intial:  # 对于每一行的，将这一行的每个元素分别写在对应的列中
             writer.writerow(i)
     for i in range(atom_num):
@@ -155,10 +197,16 @@ def points_height_matrix(smi, resolution, show=False):
             for i in arr_i:  # 对于每一行的，将这一行的每个元素分别写在对应的列中
                 writer.writerow(i)
 
+<<<<<<< HEAD
 if __name__ == "__main__":
     # 由于原子半径的限制，目前只支持以下例子
     file = "C:\\stm-result"
     mkdir(file)  # 调用函数，创建文件夹
+=======
+
+if __name__ == "__main__":
+    # 由于原子半径的限制，目前只支持以下例子
+>>>>>>> 23e8f4f893e395a750f6e805f2e603a78fa0dcd5
     smi = 'CNC(=O)N(N(CCCl)S(C)(=O)=O)S(C)(=O)=O'
     resolution = 400
     points_height_matrix(smi, resolution, show=True)
