@@ -19,7 +19,7 @@ except:
 import math
 import csv
 
-#
+#todo Create a folder to store the generated files
 def mkdir(path):
     folder = os.path.exists(path)
 
@@ -31,7 +31,7 @@ def mkdir(path):
     else:
         print("---  There is this folder!  ---")
 
-#
+#todo Compute the region of the bond
 def rect_loc(row, col, angle, height, bottom):
     xo = np.cos(angle)
     yo = np.sin(angle)
@@ -49,7 +49,7 @@ def rect_loc(row, col, angle, height, bottom):
         ]
     )
 
-#
+#todo main function
 def points_height_matrix(smi, resolution, show=False):
     mol_3D= Chem.MolFromSmiles(smi)
     mol_2D= Chem.MolFromSmiles(smi)
