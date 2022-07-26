@@ -11,6 +11,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 try:
     from mayavi import mlab
+
     ENABLE_MAYAVI = True
 except:
     ENABLE_MAYAVI = False
@@ -19,7 +20,8 @@ except:
 import math
 import csv
 
-#todo Create a folder to store the generated files
+
+# todo Create a folder to store the generated files
 def mkdir(path):
     folder = os.path.exists(path)
 
@@ -31,7 +33,8 @@ def mkdir(path):
     else:
         print("---  There is this folder!  ---")
 
-#todo Compute the region of the bond
+
+# todo Compute the region of the bond
 def rect_loc(row, col, angle, height, bottom):
     xo = np.cos(angle)
     yo = np.sin(angle)
@@ -49,19 +52,20 @@ def rect_loc(row, col, angle, height, bottom):
         ]
     )
 
-#todo main function
+
+# todo main function
 def points_height_matrix(smi, resolution, show=False):
-    mol_3D= Chem.MolFromSmiles(smi)
-    mol_2D= Chem.MolFromSmiles(smi)
+    mol_3D = Chem.MolFromSmiles(smi)
+    mol_2D = Chem.MolFromSmiles(smi)
     atom_num = mol_2D.GetNumAtoms()
     bond_num = mol_2D.GetNumBonds()
     AllChem.EmbedMolecule(mol_3D, randomSeed=3)
     AllChem.MMFFOptimizeMolecule(mol_3D)  # 2D分子转为3D结构，并用力学函数进行角度校正及优化
     moleblock_3D = Chem.MolToMolBlock(mol_3D)  # 返回分子中各个原子的三维坐标
-    moleblock_2D=Chem.MolToMolBlock(mol_2D) # 返回分子中各个原子的二维坐标
+    moleblock_2D = Chem.MolToMolBlock(mol_2D)  # 返回分子中各个原子的二维坐标
     if show:
         Draw.ShowMol(mol_3D, size=(550, 550), kekulize=False)
-        Draw.ShowMol(mol_2D,size=(550,550),kekulize=False)
+        Draw.ShowMol(mol_2D, size=(550, 550), kekulize=False)
     mol_2D = Chem.MolFromMolBlock(moleblock_2D)
     conf = mol_2D.GetConformer()
     sub = mol_2D.GetSubstructMatch(mol_2D)  # 这一步是统计你所需查找返回分子的个数列表，m3d：是查询分子的smile结构,我们这里使用自查询
@@ -72,7 +76,7 @@ def points_height_matrix(smi, resolution, show=False):
         # m3d.GetAtoms()[s].GetSymbol()#编号为s对应的符号,str
         # print(m3d.GetAtoms()[s].GetSymbol(), list(conf.GetAtomPosition(s)))
         x = list(conf.GetAtomPosition(s))
-        mol_2D.GetAtomWithIdx(s).SetProp('molAtomMapNumber', str(mol_2D.GetAtomWithIdx(s).GetIdx())) #对原子进行索引
+        mol_2D.GetAtomWithIdx(s).SetProp('molAtomMapNumber', str(mol_2D.GetAtomWithIdx(s).GetIdx()))  # 对原子进行索引
         atom_symbol = mol_2D.GetAtoms()[s].GetSymbol()
         if atom_symbol == 'C':
             x.append(0.77)
@@ -127,8 +131,8 @@ def points_height_matrix(smi, resolution, show=False):
     # todo: change tuple operation to numpy operation
     points_intial = np.zeros([resolution, resolution])  # 建立网格点的初始化高度矩阵，与生成点阵坐标一一对应
     # print(x_max, x_min, y_max, y_min)
-    points_bool=np.zeros([atom_num,resolution,resolution]) #储存原子的bool矩阵
-    points_bond_bool=np.zeros([bond_num,resolution,resolution])
+    points_bool = np.zeros([atom_num, resolution, resolution])  # 储存原子的bool矩阵
+    points_bond_bool = np.zeros([bond_num, resolution, resolution])
     x_axes = np.linspace(x_min, x_max, resolution)
     y_axes = np.linspace(y_min, y_max, resolution)
     X, Y = np.meshgrid(x_axes, y_axes)
@@ -137,18 +141,18 @@ def points_height_matrix(smi, resolution, show=False):
     coordinate_points_array = coordinate_points.T
     # print(coordinate_points_array)
     coordinate_points_array = np.array(coordinate_points_array)  # 这里得再去定义一下类型，我也不知道为什么，不然后面无法操作
-    v=coordinate_points_array.reshape(resolution,resolution,2)
+    v = coordinate_points_array.reshape(resolution, resolution, 2)
 
     # todo: calculate per pixel label of each atom in the image
     # 开始计算分子中各个原子距离基平面的高度，此时我们基平面设为xoy平面，虚拟为通过点光源簇从上向下进行投影，即以接触到的最高的原子的高度作为记录的高度
     for r in range(resolution):
         for t in range(resolution):
-            x1 = v[r,t,0]
-            y1 = v[r,t,1]  # 生成的坐标点的坐标
+            x1 = v[r, t, 0]
+            y1 = v[r, t, 1]  # 生成的坐标点的坐标
             height = []
-            idex_list=[]
+            idex_list = []
             for a in atom_position:
-                x2, y2, r2,idex = a[0], a[1], a[3],a[4]
+                x2, y2, r2, idex = a[0], a[1], a[3], a[4]
                 z2 = a[2] + abs(z_min)  # 我们将基平面平移至最底部，基平面此时的方程为：z=z_min
                 changdu = math.sqrt(math.pow((x1 - x2), 2) + math.pow((y1 - y2), 2))
                 if changdu <= r2:
@@ -161,46 +165,46 @@ def points_height_matrix(smi, resolution, show=False):
                 continue
             else:
                 point_height_max = max(height)
-                point_height_max_index=height.index(point_height_max)
+                point_height_max_index = height.index(point_height_max)
                 points_intial[r][t] = point_height_max
-                point_idex=idex_list[point_height_max_index]
-                points_bool[point_idex,r,t]=1
+                point_idex = idex_list[point_height_max_index]
+                points_bool[point_idex, r, t] = 1
     points_intial = gaussian_filter(points_intial, sigma=2)
     if show:
         plt.imshow(points_intial)
         plt.show()
 
     # todo: calculate per pixel label of each bond in the image
-    bond_list=[[] for i in range(bond_num)]
+    bond_list = [[] for i in range(bond_num)]
     bonds = mol_2D.GetBonds()  # 对键进行遍历
     for bond_i in range(bond_num):
         bond_list[bond_i].append(bonds[bond_i].GetIdx())
-        atom_begin_index=bonds[bond_i].GetBeginAtomIdx()
-        atom_end_index=bonds[bond_i].GetEndAtomIdx()
+        atom_begin_index = bonds[bond_i].GetBeginAtomIdx()
+        atom_end_index = bonds[bond_i].GetEndAtomIdx()
         for t in atom_position:
-            if t[4]==atom_begin_index or t[4]==atom_end_index:
+            if t[4] == atom_begin_index or t[4] == atom_end_index:
                 bond_list[bond_i].append(t[0])
                 bond_list[bond_i].append(t[1])
                 bond_list[bond_i].append(t[3])
 
     for b in bond_list:
-        point1_x,point1_y=b[1],b[2]
-        point2_x,point2_y=b[4],b[5]
+        point1_x, point1_y = b[1], b[2]
+        point2_x, point2_y = b[4], b[5]
         jianchang = math.sqrt(math.pow((point2_x - point1_x), 2) + math.pow((point2_y - point2_x), 2))
-        point0_x=(point1_x+point2_x)/2
-        point0_y=(point1_y+point2_y)/2
-        height=jianchang/3
-        jiankuan=(b[3]+b[6])/6
+        point0_x = (point1_x + point2_x) / 2
+        point0_y = (point1_y + point2_y) / 2
+        height = jianchang / 3
+        jiankuan = (b[3] + b[6]) / 6
         dx = point2_x - point1_x
         dy = point2_y - point1_y
         angle = math.atan2(dy, dx)
-        loc = rect_loc(point0_y,point0_x, angle, height, jiankuan)
+        loc = rect_loc(point0_y, point0_x, angle, height, jiankuan)
         p = Path(loc)
         for r in range(resolution):
             for t in range(resolution):
                 x_1 = v[r, t, 0]
                 y_1 = v[r, t, 1]
-                points_bond_bool[b[0],r,t] = p.contains_point((x_1, y_1))  # bool类型，直接令其相等
+                points_bond_bool[b[0], r, t] = p.contains_point((x_1, y_1))  # bool类型，直接令其相等
 
     with open("C:\\stm-result\\points_height.csv", "w+", newline='', encoding='GBK') as f1:
         writer = csv.writer(f1, delimiter=',')
@@ -208,18 +212,19 @@ def points_height_matrix(smi, resolution, show=False):
             writer.writerow(i)
 
     for i in range(atom_num):
-        arr_i=np.array(points_bool[i],dtype=bool)
+        arr_i = np.array(points_bool[i], dtype=bool)
         with open(f"C:\\stm-result\\points_{str(i)}_atom_bool.csv", "w+", newline='', encoding='GBK') as f2:
             writer = csv.writer(f2, delimiter=',')
             for j in arr_i:  # 对于每一行的，将这一行的每个元素分别写在对应的列中
                 writer.writerow(j)
 
     for p in range(bond_num):
-        arr_i=np.array(points_bond_bool[p],dtype=bool)
+        arr_i = np.array(points_bond_bool[p], dtype=bool)
         with open(f"C:\\stm-result\\points_{str(p)}_bond_bool.csv", "w+", newline='', encoding='GBK') as f3:
             writer = csv.writer(f3, delimiter=',')
             for i in arr_i:  # 对于每一行的，将这一行的每个元素分别写在对应的列中
                 writer.writerow(i)
+
 
 if __name__ == "__main__":
     # 由于原子半径的限制，目前只支持以下例子
